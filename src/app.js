@@ -7,17 +7,36 @@ class Title extends Component{
         return <h1>{this.props.children}</h1>
     }
 }
-//함수 컴포넌트
-function Item(props){
-    return <li style={`color:${props.color}`}>{props.children}</li>
+
+let count = 0;
+
+function handleClick() {
+  count += 1;
+  render(getVdom(), document.querySelector('#root'));
 }
-const vdom = <p>
-    <Title>React</Title>
-    <ul>
+
+function Button(props) {
+  return <button onClick={props.onClick}>{props.children}</button>;
+}
+
+// 함수 컴포넌트
+function Item(props) {
+  return <li style={`color:${props.color}`}>{props.children}</li>;
+}
+
+function getVdom() {
+  return (
+    <p>
+      <Title>React</Title>
+      <ul>
         <Item color="red">첫번째</Item>
         <Item color="blue">두번째</Item>
         <Item color="green">세번째</Item>
-    </ul>
-</p>
+      </ul>
+      <Button onClick={handleClick}>Click me</Button>
+      <p>Count: {count}</p>
+    </p>
+  );
+}
 
-render(vdom, document.querySelector('#root'));
+render(getVdom(), document.querySelector('#root'));

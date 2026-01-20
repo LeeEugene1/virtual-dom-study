@@ -1,3 +1,12 @@
+import {
+    init,
+    classModule,
+    propsModule,
+    styleModule,
+    eventListenersModule,
+    h
+  } from "snabbdom";
+  
 export class Component{
     constructor(props){
         this.props = props;
@@ -19,9 +28,18 @@ export function createDom(node){
    return element;
 }
 
-export function render(vdom, container){
-	container.appendChild(createDom(vdom))
-}
+
+export const render = (function () {
+    const patch = init([classModule, propsModule, styleModule, eventListenersModule]);
+    let prevVNode = null;
+    return function (vdom, container) {
+        if (prevVNode) {
+            prevVNode = patch(prevVNode, vdom);
+        } else {
+            prevVNode = patch(container, vdom);
+        }
+    };
+})();
 
 function makeProps(props, children){
     return {
@@ -47,8 +65,27 @@ export function createElement(tag, props, ...children){
             }
         }
         
-    }else{
-        return { tag, props, children }
+    } else {
+        // 스타일 문자열을 객체로 변환 (예: "color:red;background:blue")
+        let newProps = { ...props };
+        if (newProps && typeof newProps.style === 'string') {
+            const styleObj = {};
+            newProps.style.split(';').filter(Boolean).forEach(rule => {
+                const [k, v] = rule.split(':');
+                if (k && v) styleObj[k.trim()] = v.trim();
+            });
+            newProps.style = styleObj;
+        }
+        Object.keys(newProps).forEach(key => {
+            if (/^on[A-Z]/.test(key)) {
+                const event = key.slice(2).toLowerCase();
+                const fn = newProps[key];
+                delete newProps[key];
+                newProps.on = { ...(newProps.on || {}), [event]: fn };
+            }
+        });
+        const flatChildren = [].concat(...children);
+        return h(tag, newProps, flatChildren);
     }
     
 }
